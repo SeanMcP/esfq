@@ -1,25 +1,27 @@
-export function Select<ItemType>(data: ItemType[]) {
-  return <API<ItemType>>{
-    rows: data,
-    orderBy(
-      mapOrKey: keyof ItemType | ((arg0: ItemType) => any),
-      direction: Direction = "ASC"
-    ) {
-      this.rows.sort((a: ItemType, b: ItemType) => {
+export function select<ItemType>(data: ItemType[]) {
+  return <Select<ItemType>>{
+    result: data,
+    orderBy(mapOrKey, direction = "ASC") {
+      this.result.sort((a: ItemType, b: ItemType) => {
+        let A: unknown, B: unknown;
+        if (typeof mapOrKey === "function") {
+          A = mapOrKey(a);
+          B = mapOrKey(b);
+        } else {
+          A = a[mapOrKey];
+          B = b[mapOrKey];
+        }
+
         if (direction === "ASC") {
-          return typeof mapOrKey === "function"
-            ? mapOrKey(a) - mapOrKey(b)
-            : (a[mapOrKey] as any) - (b[mapOrKey] as any);
+          return A < B ? -1 : 1;
         } else if (direction === "DESC") {
-          return typeof mapOrKey === "function"
-            ? mapOrKey(b) - mapOrKey(a)
-            : (b[mapOrKey] as any) - (a[mapOrKey] as any);
+          return A > B ? -1 : 1;
         }
       });
       return this;
     },
-    where(fn: (item: ItemType) => boolean) {
-      this.rows = this.rows.filter(fn);
+    where(filterFn) {
+      this.result = this.result.filter(filterFn);
       return this;
     },
   };
@@ -28,11 +30,11 @@ export function Select<ItemType>(data: ItemType[]) {
 // Types
 
 type Direction = "ASC" | "DESC";
-type API<ItemType> = {
-  rows: ItemType[];
-  orderBy: (
+type Select<ItemType> = {
+  readonly result: ItemType[];
+  readonly orderBy: (
     mapOrKey: keyof ItemType | ((item: ItemType) => any),
     direction?: Direction
-  ) => API<ItemType>;
-  where: (filterFn: (item: ItemType) => boolean) => API<ItemType>;
+  ) => Select<ItemType>;
+  readonly where: (filterFn: (item: ItemType) => boolean) => Select<ItemType>;
 };
