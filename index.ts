@@ -1,9 +1,7 @@
 export function select<ItemType>(data: ItemType[]) {
   return <Select<ItemType>>{
     result: data,
-    // TODO: Add this typing
-    // orderBy(this: Select<ItemType>, mapOrKey, direction = "ASC") {
-    orderBy(mapOrKey, direction = "ASC") {
+    orderBy(this: Select<ItemType>, mapOrKey, direction = "ASC") {
       this.result.sort((a: ItemType, b: ItemType) => {
         let A: unknown, B: unknown;
         if (typeof mapOrKey === "function") {
@@ -22,8 +20,7 @@ export function select<ItemType>(data: ItemType[]) {
       });
       return this;
     },
-    // where(this: Select<ItemType>, filterFn) {
-    where(filterFn) {
+    where(this: Select<ItemType>, filterFn) {
       this.result = this.result.filter(filterFn);
       return this;
     },
@@ -33,12 +30,13 @@ export function select<ItemType>(data: ItemType[]) {
 export function update<ItemType>(data: ItemType[]) {
   return <Update<ItemType>>{
     result: data,
-    set(mapFn) {
+    set(this: Update<ItemType>, mapFn) {
       if (this.temp) {
         // where() has been called, update result
         // this.temp is a filterFn
         this.result = this.result.map((item) => {
-          if (this.temp(item)) {
+          // TODO: Improve this
+          if ((this.temp as FilterFn<ItemType>)(item)) {
             return mapFn(item);
           } else {
             return item;
@@ -50,7 +48,7 @@ export function update<ItemType>(data: ItemType[]) {
       }
       return this;
     },
-    where(filterFn) {
+    where(this: Update<ItemType>, filterFn) {
       if (this.temp) {
         // set() has been called, update result
         // this.temp is a full list of updated items
@@ -70,18 +68,26 @@ export function update<ItemType>(data: ItemType[]) {
   };
 }
 
-// Types
+// ===== Types =====
+// select
 type Direction = "ASC" | "DESC";
 type Select<ItemType> = {
-  readonly result: ItemType[];
+  result: ItemType[];
   readonly orderBy: (
     mapOrKey: keyof ItemType | ((item: ItemType) => any),
     direction?: Direction
   ) => Select<ItemType>;
   readonly where: (filterFn: (item: ItemType) => boolean) => Select<ItemType>;
 };
+
+// update
 type Update<ItemType> = {
-  readonly result: ItemType[];
-  readonly set: (mapFn: (item: ItemType) => ItemType) => Update<ItemType>;
-  readonly where: (filterFn: (item: ItemType) => boolean) => Update<ItemType>;
+  result: ItemType[];
+  temp: Update<ItemType>['result'] | FilterFn<ItemType>;
+  readonly set: Set<ItemType>;
+  readonly where: UpdateWhere<ItemType>;
 };
+type Set<ItemType> = (mapFn: (item: ItemType) => ItemType) => Update<ItemType>
+// TODO: Find a way to have a shared Where type
+type UpdateWhere<ItemType> = (filterFn: FilterFn<ItemType>) => Update<ItemType>
+type FilterFn<ItemType> = (item: ItemType) => boolean
