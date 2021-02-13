@@ -1,0 +1,24 @@
+{
+  "name": "esfq",
+  "version": "1.0.0",
+  "description": "🔍 Functional queries for ECMAScript",
+  "scripts": {
+    "test": "uvu -r ts-node/register tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SeanMcP/esfq.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SeanMcP/esfq/issues"
+  },
+  "homepage": "https://github.com/SeanMcP/esfq#readme",
+  "devDependencies": {
+    "ts-node": "^9.1.1",
+    "typescript": "^4.1.5",
+    "uvu": "^0.5.1"
+  }
+}
