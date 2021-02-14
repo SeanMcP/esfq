@@ -1,4 +1,3 @@
-// Can't use the name `delete`
 export function deleteFrom<ItemType>(data: ItemType[]) {
   return <DeleteFrom<ItemType>>{
     result: data,
@@ -12,7 +11,6 @@ export function deleteFrom<ItemType>(data: ItemType[]) {
 export function insertInto<ItemType>(data: ItemType[]) {
   return <InsertInto<ItemType>>{
     result: data,
-    spuds: true,
     values(this: InsertInto<ItemType>, item: ItemType) {
       this.result = this.result.concat(item);
       return this;
@@ -21,7 +19,10 @@ export function insertInto<ItemType>(data: ItemType[]) {
 }
 
 export function selectFrom<ItemType>(data: ItemType[]) {
-  function limitResultToColumns(result, columns) {
+  function limitResultToColumns(
+    result: SelectFrom<ItemType>["result"],
+    columns: SelectFrom<ItemType>["_columns"]
+  ) {
     return result.map((item) => {
       const next = {} as ItemType;
       columns.forEach((column) => {
@@ -75,10 +76,10 @@ export function update<ItemType>(data: ItemType[]) {
   return <Update<ItemType>>{
     result: data,
     set(this: Update<ItemType>, mapFn) {
-      if (this.tempFilterFn) {
+      if (this._filterFn) {
         // where() has been called, update result
         this.result = this.result.map((item) => {
-          if (this.tempFilterFn(item)) {
+          if (this._filterFn(item)) {
             return mapFn(item);
           } else {
             return item;
@@ -86,23 +87,23 @@ export function update<ItemType>(data: ItemType[]) {
         });
         // Question: Should this.temp be cleared?
       } else {
-        this.tempResult = this.result.map(mapFn);
+        this._result = this.result.map(mapFn);
       }
       return this;
     },
     where(this: Update<ItemType>, filterFn) {
-      if (this.tempResult) {
+      if (this._result) {
         // set() has been called, update result
         this.result = this.result.map((item, index) => {
           if (filterFn(item)) {
             // This item should be updated
-            return this.tempResult[index];
+            return this._result[index];
           }
           return item;
         });
         // Question: Should this.temp be cleared?
       } else {
-        this.tempFilterFn = filterFn;
+        this._filterFn = filterFn;
       }
       return this;
     },
@@ -142,8 +143,8 @@ type SelectFrom<ItemType> = {
 // update
 type Update<ItemType> = {
   result: ItemType[];
-  tempResult: Update<ItemType>["result"];
-  tempFilterFn: FilterFn<ItemType>;
+  _result: Update<ItemType>["result"];
+  _filterFn: FilterFn<ItemType>;
   readonly set: Set<ItemType>;
   readonly where: UpdateWhere<ItemType>;
 };
