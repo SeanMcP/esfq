@@ -27,6 +27,17 @@ export function select<ItemType>(data: ItemType[]) {
   };
 }
 
+export function insertInto<ItemType>(data: ItemType[]) {
+  return <InsertInto<ItemType>>{
+    result: data,
+    spuds: true,
+    values(this: InsertInto<ItemType>, item: ItemType) {
+      this.result = this.result.concat(item);
+      return this;
+    },
+  };
+}
+
 export function update<ItemType>(data: ItemType[]) {
   return <Update<ItemType>>{
     result: data,
@@ -80,14 +91,20 @@ type Select<ItemType> = {
   readonly where: (filterFn: (item: ItemType) => boolean) => Select<ItemType>;
 };
 
+// insertInto
+type InsertInto<ItemType> = {
+  result: ItemType[];
+  readonly values: (item: ItemType) => InsertInto<ItemType>;
+};
+
 // update
 type Update<ItemType> = {
   result: ItemType[];
-  temp: Update<ItemType>['result'] | FilterFn<ItemType>;
+  temp: Update<ItemType>["result"] | FilterFn<ItemType>;
   readonly set: Set<ItemType>;
   readonly where: UpdateWhere<ItemType>;
 };
-type Set<ItemType> = (mapFn: (item: ItemType) => ItemType) => Update<ItemType>
+type Set<ItemType> = (mapFn: (item: ItemType) => ItemType) => Update<ItemType>;
 // TODO: Find a way to have a shared Where type
-type UpdateWhere<ItemType> = (filterFn: FilterFn<ItemType>) => Update<ItemType>
-type FilterFn<ItemType> = (item: ItemType) => boolean
+type UpdateWhere<ItemType> = (filterFn: FilterFn<ItemType>) => Update<ItemType>;
+type FilterFn<ItemType> = (item: ItemType) => boolean;
