@@ -42,12 +42,10 @@ export function update<ItemType>(data: ItemType[]) {
   return <Update<ItemType>>{
     result: data,
     set(this: Update<ItemType>, mapFn) {
-      if (this.temp) {
+      if (this.tempFilterFn) {
         // where() has been called, update result
-        // this.temp is a filterFn
         this.result = this.result.map((item) => {
-          // TODO: Improve this
-          if ((this.temp as FilterFn<ItemType>)(item)) {
+          if (this.tempFilterFn(item)) {
             return mapFn(item);
           } else {
             return item;
@@ -55,24 +53,23 @@ export function update<ItemType>(data: ItemType[]) {
         });
         // Question: Should this.temp be cleared?
       } else {
-        this.temp = this.result.map(mapFn);
+        this.tempResult = this.result.map(mapFn);
       }
       return this;
     },
     where(this: Update<ItemType>, filterFn) {
-      if (this.temp) {
+      if (this.tempResult) {
         // set() has been called, update result
-        // this.temp is a full list of updated items
         this.result = this.result.map((item, index) => {
           if (filterFn(item)) {
             // This item should be updated
-            return this.temp[index];
+            return this.tempResult[index];
           }
           return item;
         });
         // Question: Should this.temp be cleared?
       } else {
-        this.temp = filterFn;
+        this.tempFilterFn = filterFn;
       }
       return this;
     },
@@ -100,7 +97,8 @@ type InsertInto<ItemType> = {
 // update
 type Update<ItemType> = {
   result: ItemType[];
-  temp: Update<ItemType>["result"] | FilterFn<ItemType>;
+  tempResult: Update<ItemType>["result"];
+  tempFilterFn: FilterFn<ItemType>;
   readonly set: Set<ItemType>;
   readonly where: UpdateWhere<ItemType>;
 };
