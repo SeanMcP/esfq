@@ -9,10 +9,35 @@ export function deleteFrom<ItemType>(data: ItemType[]) {
   };
 }
 
-export function select<ItemType>(data: ItemType[]) {
-  return <Select<ItemType>>{
+export function insertInto<ItemType>(data: ItemType[]) {
+  return <InsertInto<ItemType>>{
     result: data,
-    orderBy(this: Select<ItemType>, mapOrKey, direction = "ASC") {
+    spuds: true,
+    values(this: InsertInto<ItemType>, item: ItemType) {
+      this.result = this.result.concat(item);
+      return this;
+    },
+  };
+}
+
+export function selectFrom<ItemType>(data: ItemType[]) {
+  function limitResultToColumns(result, columns) {
+    return result.map((item) => {
+      const next = {} as ItemType;
+      columns.forEach((column) => {
+        next[column] = item[column];
+      });
+      return next;
+    });
+  }
+  return <SelectFrom<ItemType>>{
+    result: data,
+    columns(this: SelectFrom<ItemType>, columns) {
+      this._columns = columns;
+      this.result = limitResultToColumns(this.result, this._columns);
+      return this;
+    },
+    orderBy(this: SelectFrom<ItemType>, mapOrKey, direction = "ASC") {
       this.result.sort((a: ItemType, b: ItemType) => {
         let A: unknown, B: unknown;
         if (typeof mapOrKey === "function") {
@@ -29,21 +54,18 @@ export function select<ItemType>(data: ItemType[]) {
           return A > B ? -1 : 1;
         }
       });
-      return this;
-    },
-    where(this: Select<ItemType>, filterFn) {
-      this.result = this.result.filter(filterFn);
-      return this;
-    },
-  };
-}
 
-export function insertInto<ItemType>(data: ItemType[]) {
-  return <InsertInto<ItemType>>{
-    result: data,
-    spuds: true,
-    values(this: InsertInto<ItemType>, item: ItemType) {
-      this.result = this.result.concat(item);
+      if (this._columns)
+        this.result = limitResultToColumns(this.result, this._columns);
+
+      return this;
+    },
+    where(this: SelectFrom<ItemType>, filterFn) {
+      this.result = this.result.filter(filterFn);
+
+      if (this._columns)
+        this.result = limitResultToColumns(this.result, this._columns);
+
       return this;
     },
   };
@@ -91,7 +113,9 @@ export function update<ItemType>(data: ItemType[]) {
 // delete
 type DeleteFrom<ItemType> = {
   result: ItemType[];
-  readonly where: (filterFn: (item: ItemType) => boolean) => DeleteFrom<ItemType>;
+  readonly where: (
+    filterFn: (item: ItemType) => boolean
+  ) => DeleteFrom<ItemType>;
 };
 
 // insertInto
@@ -102,13 +126,17 @@ type InsertInto<ItemType> = {
 
 // select
 type Direction = "ASC" | "DESC";
-type Select<ItemType> = {
+type SelectFrom<ItemType> = {
   result: ItemType[];
+  _columns?: (keyof ItemType)[];
+  readonly columns: (columns: (keyof ItemType)[]) => SelectFrom<ItemType>;
   readonly orderBy: (
     mapOrKey: keyof ItemType | ((item: ItemType) => any),
     direction?: Direction
-  ) => Select<ItemType>;
-  readonly where: (filterFn: (item: ItemType) => boolean) => Select<ItemType>;
+  ) => SelectFrom<ItemType>;
+  readonly where: (
+    filterFn: (item: ItemType) => boolean
+  ) => SelectFrom<ItemType>;
 };
 
 // update
