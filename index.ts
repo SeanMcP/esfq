@@ -1,3 +1,14 @@
+// Can't use the name `delete`
+export function deleteFrom<ItemType>(data: ItemType[]) {
+  return <DeleteFrom<ItemType>>{
+    result: data,
+    where(this: DeleteFrom<ItemType>, filterFn) {
+      this.result = this.result.filter((item) => !filterFn(item));
+      return this;
+    },
+  };
+}
+
 export function select<ItemType>(data: ItemType[]) {
   return <Select<ItemType>>{
     result: data,
@@ -77,6 +88,18 @@ export function update<ItemType>(data: ItemType[]) {
 }
 
 // ===== Types =====
+// delete
+type DeleteFrom<ItemType> = {
+  result: ItemType[];
+  readonly where: (filterFn: (item: ItemType) => boolean) => DeleteFrom<ItemType>;
+};
+
+// insertInto
+type InsertInto<ItemType> = {
+  result: ItemType[];
+  readonly values: (item: ItemType) => InsertInto<ItemType>;
+};
+
 // select
 type Direction = "ASC" | "DESC";
 type Select<ItemType> = {
@@ -86,12 +109,6 @@ type Select<ItemType> = {
     direction?: Direction
   ) => Select<ItemType>;
   readonly where: (filterFn: (item: ItemType) => boolean) => Select<ItemType>;
-};
-
-// insertInto
-type InsertInto<ItemType> = {
-  result: ItemType[];
-  readonly values: (item: ItemType) => InsertInto<ItemType>;
 };
 
 // update
