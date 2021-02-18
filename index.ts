@@ -132,9 +132,7 @@ export function update<ItemType>(data: ItemType[]) {
 // deleteFrom
 type DeleteFrom<ItemType> = {
   result: ItemType[];
-  readonly where: (
-    filterFn: (item: ItemType) => boolean
-  ) => DeleteFrom<ItemType>;
+  readonly where: Where<ItemType, DeleteFrom<ItemType>>;
 };
 
 // insertInto
