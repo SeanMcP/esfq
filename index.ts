@@ -19,9 +19,26 @@ export function insertInto<ItemType>(data: ItemType[]) {
 }
 
 export function selectFrom<ItemType>(data: ItemType[]) {
+  // function limitResultToColumns<
+  //   ResultType extends SelectFrom<ItemType>["result"],
+  //   ColumnType extends keyof ItemType
+  // >(result: ResultType, columns: ColumnType[]) {
+  //   type ItemSelectColumns = {
+  //     [K in ValuesOf<typeof columns>]: ItemType[K];
+  //   };
+  //   return result.map((item) => {
+  //     const next = {} as any;
+  //     columns.forEach((column) => {
+  //       next[column] = item[column];
+  //     });
+  //     return next as ItemSelectColumns;
+  //   }) as ItemSelectColumns[];
+  // }
+  let _columns: (keyof ItemType)[] = null;
+
   function limitResultToColumns(
     result: SelectFrom<ItemType>["result"],
-    columns: SelectFrom<ItemType>["_columns"]
+    columns: typeof _columns
   ) {
     return result.map((item) => {
       const next = {} as ItemType;
@@ -31,11 +48,12 @@ export function selectFrom<ItemType>(data: ItemType[]) {
       return next;
     });
   }
+
   return <SelectFrom<ItemType>>{
     result: data,
     columns(this: SelectFrom<ItemType>, columns) {
-      this._columns = columns;
-      this.result = limitResultToColumns(this.result, this._columns);
+      _columns = columns;
+      this.result = limitResultToColumns(this.result, _columns);
       return this;
     },
     orderBy(this: SelectFrom<ItemType>, mapOrKey, direction = "ASC") {
@@ -56,16 +74,14 @@ export function selectFrom<ItemType>(data: ItemType[]) {
         }
       });
 
-      if (this._columns)
-        this.result = limitResultToColumns(this.result, this._columns);
+      if (_columns) this.result = limitResultToColumns(this.result, _columns);
 
       return this;
     },
     where(this: SelectFrom<ItemType>, filterFn) {
       this.result = this.result.filter(filterFn);
 
-      if (this._columns)
-        this.result = limitResultToColumns(this.result, this._columns);
+      if (_columns) this.result = limitResultToColumns(this.result, _columns);
 
       return this;
     },
@@ -73,37 +89,39 @@ export function selectFrom<ItemType>(data: ItemType[]) {
 }
 
 export function update<ItemType>(data: ItemType[]) {
+  let _filterFn: FilterFn<ItemType> = null;
+  let _result: Update<ItemType>["result"] = null;
   return <Update<ItemType>>{
     result: data,
     set(this: Update<ItemType>, mapFn) {
-      if (this._filterFn) {
+      if (_filterFn) {
         // where() has been called, update result
         this.result = this.result.map((item) => {
-          if (this._filterFn(item)) {
+          if (_filterFn(item)) {
             return mapFn(item);
           } else {
             return item;
           }
         });
-        // Question: Should this.temp be cleared?
+        // Question: Should _filterFn  be cleared?
       } else {
-        this._result = this.result.map(mapFn);
+        _result = this.result.map(mapFn);
       }
       return this;
     },
     where(this: Update<ItemType>, filterFn) {
-      if (this._result) {
+      if (_result) {
         // set() has been called, update result
         this.result = this.result.map((item, index) => {
           if (filterFn(item)) {
             // This item should be updated
-            return this._result[index];
+            return _result[index];
           }
           return item;
         });
-        // Question: Should this.temp be cleared?
+        // Question: Should _result be cleared?
       } else {
-        this._filterFn = filterFn;
+        _filterFn = filterFn;
       }
       return this;
     },
@@ -111,7 +129,7 @@ export function update<ItemType>(data: ItemType[]) {
 }
 
 // ===== Types =====
-// delete
+// deleteFrom
 type DeleteFrom<ItemType> = {
   result: ItemType[];
   readonly where: (
@@ -125,30 +143,25 @@ type InsertInto<ItemType> = {
   readonly values: (item: ItemType) => InsertInto<ItemType>;
 };
 
-// select
+// selectFrom
 type Direction = "ASC" | "DESC";
 type SelectFrom<ItemType> = {
   result: ItemType[];
-  _columns?: (keyof ItemType)[];
   readonly columns: (columns: (keyof ItemType)[]) => SelectFrom<ItemType>;
   readonly orderBy: (
     mapOrKey: keyof ItemType | ((item: ItemType) => any),
     direction?: Direction
   ) => SelectFrom<ItemType>;
-  readonly where: (
-    filterFn: (item: ItemType) => boolean
-  ) => SelectFrom<ItemType>;
+  readonly where: Where<ItemType, SelectFrom<ItemType>>;
 };
 
 // update
 type Update<ItemType> = {
   result: ItemType[];
-  _result: Update<ItemType>["result"];
-  _filterFn: FilterFn<ItemType>;
-  readonly set: Set<ItemType>;
-  readonly where: UpdateWhere<ItemType>;
+  readonly set: (mapFn: (item: ItemType) => ItemType) => Update<ItemType>;
+  readonly where: Where<ItemType, Update<ItemType>>;
 };
-type Set<ItemType> = (mapFn: (item: ItemType) => ItemType) => Update<ItemType>;
-// TODO: Find a way to have a shared Where type
-type UpdateWhere<ItemType> = (filterFn: FilterFn<ItemType>) => Update<ItemType>;
+
+// shared
 type FilterFn<ItemType> = (item: ItemType) => boolean;
+type Where<ItemType, ReturnType> = (filterFn: FilterFn<ItemType>) => ReturnType;
