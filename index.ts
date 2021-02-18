@@ -57,7 +57,7 @@ export function selectFrom<ItemType>(data: ItemType[]) {
       return this;
     },
     orderBy(this: SelectFrom<ItemType>, mapOrKey, direction = "ASC") {
-      this.result.sort((a: ItemType, b: ItemType) => {
+      this.result = this.result.slice(0).sort((a: ItemType, b: ItemType) => {
         let A: unknown, B: unknown;
         if (typeof mapOrKey === "function") {
           A = mapOrKey(a);

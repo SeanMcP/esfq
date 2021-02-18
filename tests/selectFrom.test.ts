@@ -19,6 +19,11 @@ test("Returns result array", () => {
   assert.is(Array.isArray(result), true);
 });
 
+test("orderBy does not mutate data", () => {
+  const { result } = selectFrom<Item>(data).orderBy('name', "ASC");
+  assert.not.equal(result, data);
+});
+
 test("where filters values", () => {
   const { result } = selectFrom<Item>(data).where(({ value }) => value > 5);
   assert.equal(
