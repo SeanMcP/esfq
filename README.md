@@ -29,3 +29,19 @@ const { result } = insertInto<Item>(data).set({ id: 3, name: 'cashews' });
 #### Methods
 
 - `set`
+
+### selectFrom
+
+Returns items that match the provided conditions
+
+```ts
+const { result } = selectFrom<Item>(data).where(({ value }) => value > 4).orderBy("id", "ASC").columns(["name", "value"])
+```
+
+**Notes**: Unlike SQL, the order of the statements matters.
+
+#### Methods
+
+- `columns`
+- `orderBy`
+- `where`
