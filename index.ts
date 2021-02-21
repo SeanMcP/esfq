@@ -128,7 +128,41 @@ export function update<ItemType>(data: ItemType[]) {
   };
 }
 
+export function Schema<ItemType>(): {
+  deleteFrom: typeof deleteFrom;
+  insertInto: typeof insertInto;
+  selectFrom: typeof selectFrom;
+  update: typeof update;
+};
+export function Schema<ItemType>(
+  resolver: () => ItemType[]
+): {
+  deleteFrom: () => ReturnType<FunctionalQuery<ItemType, DeleteFrom<ItemType>>>;
+  insertInto: () => ReturnType<FunctionalQuery<ItemType, InsertInto<ItemType>>>;
+  selectFrom: () => ReturnType<FunctionalQuery<ItemType, SelectFrom<ItemType>>>;
+  update: () => ReturnType<FunctionalQuery<ItemType, Update<ItemType>>>;
+};
+export function Schema<ItemType>(resolver?: () => ItemType[]) {
+  if (resolver) {
+    return {
+      deleteFrom: () => deleteFrom<ItemType>(resolver()),
+      insertInto: () => insertInto<ItemType>(resolver()),
+      selectFrom: () => selectFrom<ItemType>(resolver()),
+      update: () => update<ItemType>(resolver()),
+    };
+  } else {
+    return {
+      // TODO: How to keep these arguments in sync?
+      deleteFrom: (data: ItemType[]) => deleteFrom<ItemType>(data),
+      insertInto: (data: ItemType[]) => insertInto<ItemType>(data),
+      selectFrom: (data: ItemType[]) => selectFrom<ItemType>(data),
+      update: (data: ItemType[]) => update<ItemType>(data),
+    };
+  }
+}
+
 // ===== Types =====
+type FunctionalQuery<ItemType, ReturnType> = (data: ItemType[]) => ReturnType;
 // deleteFrom
 type DeleteFrom<ItemType> = {
   result: ItemType[];
