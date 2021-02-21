@@ -49,12 +49,27 @@ const { result } = selectFrom<Item>(data)
 - `orderBy`
 - `where`
 
+### update
+
+Updates all of the items which match the provided condition
+
+```ts
+const { result } = update<Item>(data)
+  .where((item) => item.id === 3)
+  .set((item) => ({ ...item, name: "hazelnuts" }));
+```
+
+#### Methods
+
+- `set`
+- `where`
+
 ## Schema
 
 To reduce the boilerplate for creating functional queries, you can use the `Schema` function:
 
 ```ts
-const fq = Schema<ItemType>();
+const fq = Schema<Item>();
 
 fq.deleteFrom(data).where(/* ... */);
 fq.insertInto(data).values(/* ... */);
@@ -67,8 +82,8 @@ The functions returned all received the initial item type.
 If you are working with an external data source like `localStorage`, you can go one step further and pass a resolver to `Schema`:
 
 ```ts
-const fq = Schema<ItemType>(() =>
-  JSON.stringify(localStorage.getItem("example") as ItemType[])
+const fq = Schema<Item>(() =>
+  JSON.stringify(localStorage.getItem("example") as Item[])
 );
 
 fq.deleteFrom().where(/* ... */);
