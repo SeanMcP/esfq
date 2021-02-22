@@ -11,7 +11,8 @@
     "prebuild": "npm run test",
     "build": "tsc -p tsconfig.esm.json && tsc -p tsconfig.cjs.json",
     "prepublish": "npm run build",
-    "test": "uvu -r ts-node/register tests"
+    "test": "uvu -r ts-node/register tests",
+    "postversion": "git push && git push --tags"
   },
   "repository": {
     "type": "git",
