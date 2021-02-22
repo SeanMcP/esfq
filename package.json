@@ -1,8 +1,16 @@
 {
   "name": "esfq",
-  "version": "1.0.0",
-  "description": "🔍 Functional queries for ECMAScript",
+  "version": "0.1.0",
+  "description": "Functional queries for ECMAScript",
+  "main": "./lib/cjs/index.js",
+  "module": "./lib/esm/index.js",
+  "files": [
+    "lib/"
+  ],
   "scripts": {
+    "prebuild": "npm run test",
+    "build": "tsc -p tsconfig.esm.json && tsc -p tsconfig.cjs.json",
+    "prepublish": "npm run build",
     "test": "uvu -r ts-node/register tests"
   },
   "repository": {
@@ -10,7 +18,11 @@
     "url": "git+https://github.com/SeanMcP/esfq.git"
   },
   "keywords": [],
-  "author": "",
+  "author": {
+    "email": "sean@seanmcp.com",
+    "name": "Sean McPherson",
+    "url": "https://seanmcp.com"
+  },
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/SeanMcP/esfq/issues"

@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "outDir": "./lib/esm/",
+        "target": "ES2015",
+        "module": "ES2020",
+        "noImplicitAny": true,
+        "removeComments": true,
+        "declaration": true,
+        "sourceMap": true
+    },
+    "include": [
+        "./index.ts"
+    ]
+}
