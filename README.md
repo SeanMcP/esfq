@@ -91,3 +91,7 @@ fq.insertInto().values(/* ... */);
 fq.selectFrom().columns(/* ... */);
 fq.update().where(/* ... */);
 ```
+
+## License
+
+[ISC](./LICENSE) © 2021 [Sean McPherson](https://seanmcp.com)
